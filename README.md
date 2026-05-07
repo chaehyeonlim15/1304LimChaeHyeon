@@ -1,0 +1,202 @@
+[weather.html](https://github.com/user-attachments/files/27499885/weather.html)
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>익산시 실시간 기상 대시보드</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+        body { font-family: 'Noto Sans KR', sans-serif; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+
+    <div class="container mx-auto px-4 py-10 max-w-4xl">
+        <header class="text-center mb-10">
+            <div class="inline-block bg-white p-3 rounded-full shadow-sm mb-4">
+                <span class="text-2xl">🏛️</span>
+            </div>
+            <h1 class="text-3xl font-bold text-slate-800 mb-2">익산시 실시간 기상 정보</h1>
+            <p class="text-slate-500 font-medium">익산시청 기준 (격자: 60, 121)</p>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div class="bg-white/80 backdrop-blur-md p-6 rounded-3xl shadow-sm border border-white">
+                <h3 class="text-xs font-bold text-indigo-400 uppercase tracking-wider mb-2">조회 지역</h3>
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-location-dot text-indigo-500 text-xl"></i>
+                    <span class="text-xl font-bold text-slate-700">전라북도 익산시</span>
+                </div>
+            </div>
+            <div class="bg-white/80 backdrop-blur-md p-6 rounded-3xl shadow-sm border border-white">
+                <h3 class="text-xs font-bold text-indigo-400 uppercase tracking-wider mb-2">데이터 업데이트 시각</h3>
+                <div class="flex items-center gap-3">
+                    <i class="fa-regular fa-clock text-indigo-500 text-xl"></i>
+                    <span id="update-time" class="text-xl font-bold text-slate-700">-</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-white">
+            <div class="bg-slate-800 px-6 py-5 flex justify-between items-center">
+                <h2 class="text-white font-bold text-lg flex items-center gap-2">
+                    <i class="fa-solid fa-cloud-sun-rain"></i> 익산시 현재 날씨 상태
+                </h2>
+                <button onclick="fetchWeatherData()" class="bg-indigo-500 hover:bg-indigo-600 text-white px-5 py-2 rounded-xl text-sm font-bold transition-all shadow-lg active:scale-95">
+                    새로고침
+                </button>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50 text-slate-500 text-xs uppercase tracking-widest border-b">
+                            <th class="p-5 font-bold">관측 항목</th>
+                            <th class="p-5 font-bold text-center">관측값</th>
+                            <th class="p-5 font-bold">단위</th>
+                        </tr>
+                    </thead>
+                    <tbody id="weather-body" class="divide-y divide-slate-100">
+                        <tr>
+                            <td colspan="3" class="p-20 text-center">
+                                <div class="flex flex-col items-center gap-3">
+                                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
+                                    <p class="text-slate-400">데이터를 가져오는 중입니다...</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <footer class="mt-10 text-center">
+            <p class="text-sm text-slate-400">API Key: e4184684651...b299</p>
+            <div class="mt-4 flex justify-center gap-4">
+                <span class="text-[10px] bg-slate-200 px-2 py-1 rounded text-slate-500 italic uppercase font-bold tracking-tighter">Powered by 공공데이터포털</span>
+                <span class="text-[10px] bg-slate-200 px-2 py-1 rounded text-slate-500 italic uppercase font-bold tracking-tighter">Source: 기상청</span>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // 발급받으신 API 키
+        const API_KEY = 'e41846846510b18d2460efd845895a86fb7b5092809c6054cca63c321ab8b299';
+        
+        // 익산시 격자 정보
+        const IKSAN_NX = 60;
+        const IKSAN_NY = 121;
+
+        function getApiDateTime() {
+            const now = new Date();
+            let hours = now.getHours();
+            let minutes = now.getMinutes();
+
+            // 기상청 초단기실황은 매시 45분 이후에 안정적으로 생성됩니다.
+            // 45분 이전이라면 이전 시간 데이터를 요청해야 합니다.
+            if (minutes < 45) {
+                hours -= 1;
+                if (hours < 0) {
+                    // 자정 이전인 경우 날짜를 어제로 돌리는 로직이 필요하지만
+                    // 간단한 예제를 위해 00시로 고정하거나 날짜 객체 활용 권장
+                    now.setDate(now.getDate() - 1);
+                    hours = 23;
+                }
+            }
+
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const date = String(now.getDate()).padStart(2, '0');
+            
+            return {
+                baseDate: `${year}${month}${date}`,
+                baseTime: `${String(hours).padStart(2, '0')}00`
+            };
+        }
+
+        const categoryMap = {
+            'T1H': { name: '기온', unit: '°C', icon: 'fa-temperature-high' },
+            'RN1': { name: '1시간 강수량', unit: 'mm', icon: 'fa-cloud-showers-heavy' },
+            'REH': { name: '습도', unit: '%', icon: 'fa-droplet' },
+            'PTY': { name: '강수형태', unit: '코드', icon: 'fa-umbrella' },
+            'WSD': { name: '풍속', unit: 'm/s', icon: 'fa-wind' },
+            'VEC': { name: '풍향', unit: 'deg', icon: 'fa-compass' }
+        };
+
+        async function fetchWeatherData() {
+            const { baseDate, baseTime } = getApiDateTime();
+            document.getElementById('update-time').innerText = `${baseDate} ${baseTime.substring(0,2)}:00`;
+
+            const url = `https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getUltraSrtNcst`;
+            const params = new URLSearchParams({
+                serviceKey: API_KEY,
+                pageNo: '1',
+                numOfRows: '10',
+                dataType: 'JSON',
+                base_date: baseDate,
+                base_time: baseTime,
+                nx: IKSAN_NX,
+                ny: IKSAN_NY
+            });
+
+            try {
+                const response = await fetch(`${url}?${params.toString()}`);
+                const result = await response.json();
+
+                if (result.response.header.resultCode !== '00') {
+                    throw new Error(result.response.header.resultMsg);
+                }
+
+                const items = result.response.body.items.item;
+                renderTable(items);
+
+            } catch (error) {
+                console.error('Fetch Error:', error);
+                document.getElementById('weather-body').innerHTML = `
+                    <tr>
+                        <td colspan="3" class="p-20 text-center">
+                            <div class="text-red-500 font-bold mb-2">⚠️ 데이터를 불러오지 못했습니다.</div>
+                            <p class="text-sm text-slate-400">사유: ${error.message}</p>
+                            <p class="text-xs text-slate-400 mt-4 underline">API 키 활성화 여부나 브라우저 CORS 설정을 확인하세요.</p>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        function renderTable(items) {
+            const tbody = document.getElementById('weather-body');
+            tbody.innerHTML = '';
+
+            items.forEach(item => {
+                const info = categoryMap[item.category];
+                if (!info) return; // 필요한 항목만 표시
+
+                const row = `
+                    <tr class="hover:bg-indigo-50/50 transition-colors group">
+                        <td class="p-5">
+                            <div class="flex items-center gap-3">
+                                <span class="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500 group-hover:bg-indigo-100 group-hover:text-indigo-600 transition-colors">
+                                    <i class="fa-solid ${info.icon}"></i>
+                                </span>
+                                <span class="font-bold text-slate-700">${info.name}</span>
+                            </div>
+                        </td>
+                        <td class="p-5 text-center">
+                            <span class="text-lg font-black text-indigo-600">${item.obsrValue}</span>
+                        </td>
+                        <td class="p-5 text-slate-400 font-medium">${info.unit}</td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+
+        // 실행
+        fetchWeatherData();
+    </script>
+</body>
+</html>
