@@ -7,32 +7,118 @@
     <style>
         body {
             font-family: 'Malgun Gothic', sans-serif;
-            background-color: #f4f7f9;
+            background-color: #f0f2f5;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
+            padding: 20px;
         }
-        .container {
-            background-color: white;
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            text-align: center;
-            border-top: 5px solid #3498db;
+        .weather-box {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 450px;
         }
-        h1 { color: #2c3e50; margin-bottom: 5px; }
-        .subtitle { color: #7f8c8d; margin-bottom: 30px; font-size: 1.1em; }
-        .temp { font-size: 3.5em; font-weight: bold; color: #3498db; }
+        h1 { font-size: 1.5rem; color: #1a73e8; margin-bottom: 5px; text-align: center; }
+        .user-info { text-align: center; color: #5f6368; margin-bottom: 20px; font-weight: bold; }
+        
+        .info-section { border-top: 1px solid #eee; padding: 15px 0; }
+        .info-label { font-weight: bold; color: #3c4043; display: block; margin-bottom: 5px; }
+        .info-value { color: #1a73e8; font-size: 1.1rem; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            text-align: left;
+        }
+        th { background-color: #f8f9fa; color: #5f6368; font-size: 0.9rem; }
+        td { font-size: 1rem; color: #3c4043; }
+        
+        .refresh-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-top: 20px;
+            transition: background 0.3s;
+        }
+        .refresh-btn:hover { background-color: #1557b0; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>1304 임채현</h1>
-        <p class="subtitle">익산시 실시간 기상 정보</p>
-        <div class="temp">22°C</div>
-        <p>현재 날씨: 맑음</p>
+
+<div class="weather-box">
+    <h1>익산시 실시간 기상 정보</h1>
+    <div class="user-info">1304 임채현</div>
+
+    <div class="info-section">
+        <span class="info-label">📍 조회 지역</span>
+        <span class="info-value">전라북도 익산시</span>
     </div>
+
+    <div class="info-section">
+        <span class="info-label">🕒 데이터 업데이트 시각</span>
+        <span class="info-value">2026-05-11 11:00</span>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>관측 항목</th>
+                <th>관측값</th>
+                <th>단위</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>강수형태</td>
+                <td>0</td>
+                <td>코드</td>
+            </tr>
+            <tr>
+                <td>습도</td>
+                <td>62</td>
+                <td>%</td>
+            </tr>
+            <tr>
+                <td>1시간 강수량</td>
+                <td>0</td>
+                <td>mm</td>
+            </tr>
+            <tr>
+                <td>기온</td>
+                <td>19.9</td>
+                <td>°C</td>
+            </tr>
+            <tr>
+                <td>풍향</td>
+                <td>132</td>
+                <td>deg</td>
+            </tr>
+            <tr>
+                <td>풍속</td>
+                <td>1.2</td>
+                <td>m/s</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <button class="refresh-btn" onclick="location.reload()">새로고침</button>
+</div>
+
 </body>
 </html>
